@@ -38,18 +38,23 @@ namespace VaersCalculation
             var ids = await ReadFileContents(filePath);
             var totalSkippedLines = 0;
             var previousLineId = ids.First();
-            foreach (var lineId in ids)
+            var outputText = "";
+            await Task.Factory.StartNew(() =>
             {
-                var lineDiff = lineId - previousLineId;
-                if (lineDiff > 1)
+                foreach (var lineId in ids)
                 {
-                    totalSkippedLines += lineDiff - 1;
-                    ContentsTextBox.Text += $"<<<<<<<<<<<< {lineDiff - 1} Skipped Lines detected of total {totalSkippedLines}!!!!>>>>>>>>>" + "\n";
+                    var lineDiff = lineId - previousLineId;
+                    if (lineDiff > 1)
+                    {
+                        totalSkippedLines += lineDiff - 1;
+                        outputText += $"<<<<<<<<<<<< {lineDiff - 1} Skipped Lines detected of total {totalSkippedLines}!!!!>>>>>>>>>" + "\n";
+                    }
+                    outputText += lineId.ToString() + "\n";
+                    previousLineId = lineId;
                 }
-                ContentsTextBox.Text += lineId.ToString() + "\n";
-                previousLineId = lineId;
-                TotalSkippedIdsTextBox.Text = totalSkippedLines.ToString();
-            }
+            });
+            TotalSkippedIdsTextBox.Text = totalSkippedLines.ToString();
+            ContentsTextBox.Text = outputText;
         }
 
         public Task<List<int>> ReadFileContents(string filePath)
