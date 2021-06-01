@@ -34,10 +34,6 @@ namespace VaersCalculation
             PerformLineCalculationDiff(FileSourceTextBox.Text, (bool)GenerateFullIdReportCheckBox.IsChecked);
         }
 
-        public static int TotalSkippedLines = 0;
-
-        public static string AggregateTextOutput = "";
-
         public async void PerformLineCalculationDiff(string filePath, bool generateReport = false)
         {
             var ids = new List<int>();
@@ -87,7 +83,7 @@ namespace VaersCalculation
                         {
                             totalSkippedLines += lineDiff - 1;
                             outputText += $"<<<<<<<<<< {lineDiff - 1} Skipped, total {totalSkippedLines}, range {previousLineDate}=>{lineDate}>>>>>>>>>" + "\n";
-                            missingDatePairsById.Add(new Tuple<int, string, string, int, int>(lineId, previousLineDate, lineDate, totalSkippedLines,(lineDiff-1)));
+                            missingDatePairsById.Add(new Tuple<int, string, string, int, int>(lineId, previousLineDate, lineDate, totalSkippedLines, (lineDiff - 1)));
                         }
                         lineNumber++;
                         outputText += lineId.ToString() + " | " + lineDate + $" | line #: {lineNumber}" + "\n";
@@ -100,7 +96,7 @@ namespace VaersCalculation
             OutputResultsToUi(totalSkippedLines, outputText, outputReport);
         }
 
-        public static string GenerateOutputReport(List<Tuple<int, string, string, int,int>> dateRanges, int totalSkippedLines, int totalLines)
+        public static string GenerateOutputReport(List<Tuple<int, string, string, int, int>> dateRanges, int totalSkippedLines, int totalLines)
         {
             string outputReport = "";
             var startDate = dateRanges[0].Item2;
@@ -111,16 +107,11 @@ namespace VaersCalculation
                 $"Id/Date range = {startId} ({startDate}) => {endId} ({endDate})" + "\n" +
                 $"which makes for a total of {endId - startId} IDs in range. " + "\n" +
                 $"the total percentage of skipped Ids relative to lines is: " +
-                $"{((double)totalSkippedLines/(double)totalLines) * 100}%" + "\n" + 
+                $"{((double)totalSkippedLines / (double)totalLines) * 100}%" + "\n" +
                 $"==========begin detail============" + "\n";
 
-            //var calculatePerDay = false;
             foreach (var dateRange in dateRanges)
             {
-                //if (calculatePerDay)
-                //{
-
-                //}
                 outputReport += $"{dateRange.Item5} Missing IDs@ {dateRange.Item1} from {dateRange.Item2} => {dateRange.Item3} of total {dateRange.Item4}" + "\n";
             }
             return outputReport;
@@ -155,7 +146,6 @@ namespace VaersCalculation
             {
                 var lineIdInt = Convert.ToInt32(AllFileLines[i].Split(',')[0]);
                 AllVAERSIdNumbers.Add(lineIdInt);
-
             }
             AllVAERSIdNumbers.Sort();
             return Task.FromResult(AllVAERSIdNumbers);
