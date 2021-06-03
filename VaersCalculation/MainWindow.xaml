@@ -11,14 +11,16 @@
             <ColumnDefinition Width="68*"/>
             <ColumnDefinition Width="723*"/>
         </Grid.ColumnDefinitions>
-        <TextBox x:Name="ContentsTextBox" Margin="10,108,10.4,9.8" TextWrapping="Wrap" AcceptsReturn="True" Grid.ColumnSpan="2"/>
-        <Button x:Name="ReadFileButton" Content="Read File" HorizontalAlignment="Left" Margin="263,10,0,0" VerticalAlignment="Top" Width="75" RenderTransformOrigin="1.97,-0.618" Click="ReadFileButton_Click" Grid.Column="1"/>
+        <TextBox x:Name="ContentsTextBox" Margin="10,169,10.4,9.8" TextWrapping="Wrap" AcceptsReturn="True" Grid.ColumnSpan="2" VerticalScrollBarVisibility="Visible" FontSize="16px" Text="Line by line audit will appear here"/>
+        <Button x:Name="ReadFileButton" Content="Read File" HorizontalAlignment="Right" Margin="0,10,252.4,0" VerticalAlignment="Top" Width="75" RenderTransformOrigin="1.97,-0.618" Click="ReadFileButton_Click" Grid.Column="1"/>
         <TextBox x:Name="CurrentLineTextBox" HorizontalAlignment="Left" Height="23" Margin="67.267,38,0,0" TextWrapping="Wrap" Text="CurrentLine" VerticalAlignment="Top" Width="120" Grid.Column="1" Visibility="Hidden"/>
         <TextBox x:Name="FileSourceTextBox" HorizontalAlignment="Left" Height="23" Margin="-58,10,0,0" TextWrapping="Wrap" Text="C:/data/2021VAERSData.csv" VerticalAlignment="Top" Width="316" Grid.Column="1"/>
-        <Button x:Name="GetMissingLinesButton" Content="Get Missing Lines" HorizontalAlignment="Left" Margin="-57.733,42,0,0" VerticalAlignment="Top" Width="120" Grid.Column="1"/>
-        <TextBox x:Name="StatusTextBox" Height="23" Margin="67,42,0,0" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Left" Width="120" Grid.Column="1"/>
-        <TextBox x:Name="TotalSkippedIdsTextBox" HorizontalAlignment="Left" Height="23" Margin="67.267,72,0,0" TextWrapping="Wrap" Text="Total Skipped Ids" VerticalAlignment="Top" Width="120" Grid.Column="1"/>
-        <Button x:Name="VAERSCsvFileChooser" Content="VAERS CSV" Grid.Column="1" Margin="343,10,304.4,0" VerticalAlignment="Top" Click="VAERSCsvFileChooser_Click"/>
+        <Button x:Name="GetMissingLinesButton" Content="Get Missing Lines" HorizontalAlignment="Left" Margin="-57.733,42,0,0" VerticalAlignment="Top" Width="120" Grid.Column="1" Visibility="Hidden"/>
+        <TextBox x:Name="StatusTextBox" Height="94" Margin="-53,42,0,0" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Left" Width="120" Grid.Column="1" FontSize="16px"/>
+        <TextBox x:Name="TotalSkippedIdsTextBox" HorizontalAlignment="Left" Height="23" Margin="-53,141,0,0" TextWrapping="Wrap" Text="Total Skipped Ids" VerticalAlignment="Top" Width="120" Grid.Column="1" FontSize="16px"/>
+        <Button x:Name="VAERSCsvFileChooser" Content="VAERS CSV" Grid.Column="1" Margin="263,10,332.4,0" VerticalAlignment="Top" Click="VAERSCsvFileChooser_Click"/>
+        <TextBox x:Name="ReportTextBox" VerticalScrollBarVisibility="Visible" Grid.Column="1" Height="126" Margin="83,38,10.4,0" TextWrapping="Wrap" Text="Report will appear here (if checked)" VerticalAlignment="Top" FontSize="16px"/>
+        <CheckBox x:Name="GenerateFullIdReportCheckBox" Content="generate report" Grid.Column="1" HorizontalAlignment="Right" Margin="0,13,10.4,0" VerticalAlignment="Top" IsChecked="True"/>
 
     </Grid>
 </Window>
