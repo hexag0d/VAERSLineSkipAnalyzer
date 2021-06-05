@@ -29,14 +29,11 @@ namespace VaersCalculation
             AggregateReportOut = "Report will appear here (if checked)",
             FileToReadText = "C:/data/2021VAERSData.csv"
         };
-
-        //public static TextBox OutputContentsTextBox { get; set; }
-
+        
         public MainWindow()
         {
             InitializeComponent();
             this.DataContext = reportingViewModel;
-            //OutputContentsTextBox = ContentsTextBox;
         }
 
         public class VaersRecord 
@@ -67,8 +64,6 @@ namespace VaersCalculation
         public class UIViewModel : INotifyPropertyChanged
         {
             public event PropertyChangedEventHandler PropertyChanged;
-            // Create the OnPropertyChanged method to raise the event
-            // The calling member's name will be used as the parameter.
             protected void OnPropertyChanged([CallerMemberName] string name = null)
             {
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
@@ -175,13 +170,22 @@ namespace VaersCalculation
                 }
                 else
                 {
-                    var previousLineId = Convert.ToInt32(vaersLines.First().Split(',')[0]);
+                    var previousLineId = 0;
                     var previousLineDate = "";
-                    var recordId = Convert.ToInt32(vaersLines.First().Split(',')[0]);
+                    var recordId = 0;
                     var lineDate = "";
-                    //var missingDatePairsById = new List<Tuple<int, string, string, int, int>>();
                     var missingDatePairsById = new List<VaersRecord>();
                     var lineNumber = 0;
+                    try
+                    {
+                        previousLineId = Convert.ToInt32(vaersLines.First().Split(',')[0]);
+                        recordId = Convert.ToInt32(vaersLines.First().Split(',')[0]);
+                    }
+                    catch (Exception ex)
+                    {
+                        reportingViewModel.FileReadStatus = $"File input was not recognized, check your csv. Error: {ex.Message}";
+                        return;
+                    }
                     foreach (var vaersLine in vaersLines)
                     {
                         recordId = Convert.ToInt32(vaersLine.Split(',')[0]);
@@ -236,16 +240,6 @@ namespace VaersCalculation
         {
             
         }
-
-        //public void OutputResultsToUi(int totalSkippedLines, string aggregateTextOutput, string outputReport = "")
-        //{
-        //    TotalSkippedIdsTextBox.Text = totalSkippedLines.ToString();
-        //    ContentsTextBox.Text = aggregateTextOutput;
-        //    if (outputReport != "")
-        //    {
-        //        reportingViewModel. = outputReport;
-        //    }
-        //}
 
         public Task<List<int>> ReadFileContentsAsInts(string filePath)
         {
