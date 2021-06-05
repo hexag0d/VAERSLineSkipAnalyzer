@@ -16,7 +16,7 @@
         <TextBox x:Name="CurrentLineTextBox" HorizontalAlignment="Left" Height="23" Margin="67.267,38,0,0" TextWrapping="Wrap" Text="CurrentLine" VerticalAlignment="Top" Width="120" Grid.Column="1" Visibility="Hidden"/>
         <TextBox x:Name="FileSourceTextBox" HorizontalAlignment="Left" Height="23" Margin="-58,10,0,0" TextWrapping="Wrap" Text="{Binding FileToReadText, Mode=TwoWay}" VerticalAlignment="Top" Width="316" Grid.Column="1"/>
         <Button x:Name="GetMissingLinesButton" Content="Get Missing Lines" HorizontalAlignment="Left" Margin="-57.733,42,0,0" VerticalAlignment="Top" Width="120" Grid.Column="1" Visibility="Hidden"/>
-        <TextBox x:Name="StatusTextBox" Height="94" Margin="-53,42,0,0" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Left" Width="120" Grid.Column="1" FontSize="16px"/>
+        <TextBox x:Name="StatusTextBox" Height="94" Margin="-53,42,0,0" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Left" Width="120" Grid.Column="1" FontSize="16px" Text="{Binding FileReadStatus, Mode=OneWay}"/>
         <TextBox x:Name="TotalSkippedIdsTextBox" HorizontalAlignment="Left" Height="23" Margin="-53,141,0,0" TextWrapping="Wrap" Text="{Binding TotalLinesSkipped, Mode=TwoWay}" VerticalAlignment="Top" Width="120" Grid.Column="1" FontSize="16px"/>
         <Button x:Name="VAERSCsvFileChooser" Content="VAERS CSV" Grid.Column="1" Margin="263,10,332.4,0" VerticalAlignment="Top" Click="VAERSCsvFileChooser_Click"/>
         <TextBox x:Name="ReportTextBox" VerticalScrollBarVisibility="Visible" Grid.Column="1" Height="126" Margin="83,38,10.4,0" TextWrapping="Wrap" Text="{Binding AggregateReportOut, Mode=TwoWay}" VerticalAlignment="Top" FontSize="16px"/>

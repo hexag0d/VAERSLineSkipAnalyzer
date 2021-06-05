@@ -139,14 +139,23 @@ namespace VaersCalculation
             reportingViewModel.TotalLinesSkipped = 0;
             reportingViewModel.FileContentsOutput = "performing line calculation diff";
             reportingViewModel.AggregateReportOut = "initializing report...";
-            if (!generateReport)
+            try
             {
-                ids = await ReadFileContentsAsInts(filePath);
+                if (!generateReport)
+                {
+                    ids = await ReadFileContentsAsInts(filePath);
+                }
+                else
+                {
+                    vaersLines = await ReadFileContentsAsStrings(filePath);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                vaersLines = await ReadFileContentsAsStrings(filePath);
+                reportingViewModel.FileReadStatus = ex.Message;
+                return;
             }
+
             await Task.Factory.StartNew(() =>
             {
                 if (!generateReport)
