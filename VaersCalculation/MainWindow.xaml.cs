@@ -1,7 +1,9 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -21,21 +23,107 @@ namespace VaersCalculation
     /// </summary>
     public partial class MainWindow : Window
     {
+        UIViewModel reportingViewModel = new UIViewModel
+        {
+            TotalLinesSkipped = 0,
+            AggregateReportOut = "Report will appear here (if checked)",
+            FileToReadText = "C:/data/2021VAERSData.csv"
+        };
+
+        //public static TextBox OutputContentsTextBox { get; set; }
+
         public MainWindow()
         {
             InitializeComponent();
+            this.DataContext = reportingViewModel;
+            //OutputContentsTextBox = ContentsTextBox;
         }
 
-        List<string> AllFileLines = new List<string>();
-
-        public class VaersRecord
+        public class VaersRecord 
         {
             public string PreviousLineDate { get; set; }
             public string LineDate { get; set; }
             public int Id { get; set; }
-            public int TotalSkippedLines { get; set; }
+            public int TotalLinesSkipped { get; set; }
             public int SkippedLinesAtThisId { get; set; }
             public int LineId { get; set; }
+        }
+        
+        public static int scrollContentsLineChangedCount = 0;
+
+        public void SetContentsText(string text)
+        {
+            reportingViewModel.FileContentsOutput += text;
+            if (scrollContentsLineChangedCount > 10)
+            {
+                
+                Application.Current.Dispatcher.Invoke(() => { this.ContentsTextBox.ScrollToEnd(); });
+                scrollContentsLineChangedCount = 0;
+                return;
+            }
+            scrollContentsLineChangedCount++;
+        }
+
+        public class UIViewModel : INotifyPropertyChanged
+        {
+            public event PropertyChangedEventHandler PropertyChanged;
+            // Create the OnPropertyChanged method to raise the event
+            // The calling member's name will be used as the parameter.
+            protected void OnPropertyChanged([CallerMemberName] string name = null)
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+            }
+            private int _totalLinesSkipped = 0;
+            public int TotalLinesSkipped
+            {
+                get { return _totalLinesSkipped; }
+                set
+                {
+                    _totalLinesSkipped = value;
+                    this.OnPropertyChanged();
+                }
+            }
+            private string _aggregateReportOut = "";
+            public string AggregateReportOut
+            {
+                get { return _aggregateReportOut; }
+                set
+                {
+                    _aggregateReportOut = value;
+                    this.OnPropertyChanged();
+                }
+            }
+            private string _fileContentsOutput { get; set; }
+            public string FileContentsOutput
+            {
+                get { return _fileContentsOutput; }
+                set
+                {
+                    _fileContentsOutput = value;
+                    this.OnPropertyChanged();
+
+                }
+            }
+            private string _fileToReadText = "";
+            public string FileToReadText
+            {
+                get { return _fileToReadText; }
+                set
+                {
+                    _fileToReadText = value;
+                    this.OnPropertyChanged();
+                }
+            }
+            private string _fileToReadStatus = "";
+            public string FileReadStatus
+            {
+                get { return _fileToReadStatus; }
+                set
+                {
+                    _fileToReadStatus = value;
+                    this.OnPropertyChanged();
+                }
+            }
         }
 
         private void ReadFileButton_Click(object sender, RoutedEventArgs e)
@@ -48,9 +136,9 @@ namespace VaersCalculation
         {
             var ids = new List<int>();
             var vaersLines = new List<string>();
-            var totalSkippedLines = 0;
-            var outputText = "";
-            var outputReport = "";
+            reportingViewModel.TotalLinesSkipped = 0;
+            reportingViewModel.FileContentsOutput = "performing line calculation diff";
+            reportingViewModel.AggregateReportOut = "initializing report...";
             if (!generateReport)
             {
                 ids = await ReadFileContentsAsInts(filePath);
@@ -69,10 +157,10 @@ namespace VaersCalculation
                         var lineDiff = lineId - previousLineId;
                         if (lineDiff > 1)
                         {
-                            totalSkippedLines += lineDiff - 1;
-                            outputText += $"<<<<<<<<<<<< {lineDiff - 1} Skipped Lines detected of total {totalSkippedLines}!!!!>>>>>>>>>" + "\n";
+                            reportingViewModel.TotalLinesSkipped += lineDiff - 1;
+                            SetContentsText($"<<<<<<<<<<<< {lineDiff - 1} Skipped Lines detected of total {reportingViewModel.TotalLinesSkipped}!!!!>>>>>>>>>" + "\n");
                         }
-                        outputText += lineId.ToString() + "\n";
+                        reportingViewModel.FileContentsOutput += lineId.ToString() + "\n";
                         previousLineId = lineId;
                     }
                 }
@@ -92,28 +180,26 @@ namespace VaersCalculation
                         lineDate = vaersLine.Split(',')[1];
                         if (lineDiff > 1)
                         {
-                            totalSkippedLines += lineDiff - 1;
-                            outputText += $"<<<<<<<<<< {lineDiff - 1} Skipped, total {totalSkippedLines}, range {previousLineDate}=>{lineDate}>>>>>>>>>" + "\n";
+                            reportingViewModel.TotalLinesSkipped += lineDiff - 1;
+                            SetContentsText($"<<<<<<<<<< {lineDiff - 1} Skipped, total {reportingViewModel.TotalLinesSkipped}, range {previousLineDate}=>{lineDate}>>>>>>>>>" + "\n");
                             missingDatePairsById.Add(new VaersRecord
                             {
                                 Id = recordId,
                                 PreviousLineDate = previousLineDate,
                                 LineDate = lineDate,
-                                TotalSkippedLines = totalSkippedLines,
+                                TotalLinesSkipped = reportingViewModel.TotalLinesSkipped,
                                 SkippedLinesAtThisId = lineDiff - 1,
                                 LineId = lineNumber
                             });
-                            //missingDatePairsById.Add(new Tuple<int, string, string, int, int>(lineId, previousLineDate, lineDate, totalSkippedLines,(lineDiff-1)));
                         }
                         lineNumber++;
-                        outputText += recordId.ToString() + " | " + lineDate + $" | line #: {lineNumber}" + "\n";
+                        SetContentsText(recordId.ToString() + " | " + lineDate + $" | line #: {lineNumber}" + "\n");
                         previousLineDate = lineDate;
                         previousLineId = recordId;
                     }
-                    outputReport = GenerateOutputReport(missingDatePairsById, totalSkippedLines, lineNumber);
+                    reportingViewModel.AggregateReportOut = GenerateOutputReport(missingDatePairsById, reportingViewModel.TotalLinesSkipped, lineNumber);
                 }
             });
-            OutputResultsToUi(totalSkippedLines, outputText, outputReport);
         }
 
         public static string GenerateOutputReport(List<VaersRecord> records, int totalSkippedLines, int totalLines)
@@ -132,55 +218,49 @@ namespace VaersCalculation
             
             foreach (var record in records)
             {
-                outputReport += $"{record.SkippedLinesAtThisId} Missing IDs@ {record.Id} from {record.PreviousLineDate} => {record.LineDate} of total {record.TotalSkippedLines}" + "\n";
+                outputReport += $"{record.SkippedLinesAtThisId} Missing IDs@ {record.Id} from {record.PreviousLineDate} => {record.LineDate} of total {record.TotalLinesSkipped}" + "\n";
             }
             return outputReport;
         }
 
         public void ClearUiValues()
         {
-            OutputResultsToUi(0, " ", " ");
+            
         }
 
-        public void OutputResultsToUi(int totalSkippedLines, string aggregateTextOutput, string outputReport = "")
-        {
-            TotalSkippedIdsTextBox.Text = totalSkippedLines.ToString();
-            ContentsTextBox.Text = aggregateTextOutput;
-            if (outputReport != "")
-            {
-                ReportTextBox.Text = outputReport;
-            }
-        }
+        //public void OutputResultsToUi(int totalSkippedLines, string aggregateTextOutput, string outputReport = "")
+        //{
+        //    TotalSkippedIdsTextBox.Text = totalSkippedLines.ToString();
+        //    ContentsTextBox.Text = aggregateTextOutput;
+        //    if (outputReport != "")
+        //    {
+        //        reportingViewModel. = outputReport;
+        //    }
+        //}
 
         public Task<List<int>> ReadFileContentsAsInts(string filePath)
         {
             StatusTextBox.Text = $"reading file path {filePath}";
-            if (AllFileLines.Count > 0)
-            {
-                AllFileLines = new List<string>();
-            }
-            AllFileLines = System.IO.File.ReadAllLines(filePath).ToList();
-            var AllVAERSIdNumbers = new List<int>();
+            var allFileLines = new List<string>();
+            allFileLines = System.IO.File.ReadAllLines(filePath).ToList();
+            var allVAERSIdNumbers = new List<int>();
             ContentsTextBox.Text = "";
-            for (int i = 1; i < AllFileLines.Count; i++)
+            for (int i = 1; i < allFileLines.Count; i++)
             {
-                var lineIdInt = Convert.ToInt32(AllFileLines[i].Split(',')[0]);
-                AllVAERSIdNumbers.Add(lineIdInt);
+                var lineIdInt = Convert.ToInt32(allFileLines[i].Split(',')[0]);
+                allVAERSIdNumbers.Add(lineIdInt);
             }
-            AllVAERSIdNumbers.Sort();
-            return Task.FromResult(AllVAERSIdNumbers);
+            allVAERSIdNumbers.Sort();
+            return Task.FromResult(allVAERSIdNumbers);
         }
 
         public Task<List<string>> ReadFileContentsAsStrings(string filePath)
         {
-            StatusTextBox.Text = $"reading file path {filePath}";
-            if (AllFileLines.Count > 0)
-            {
-                AllFileLines = new List<string>();
-            }
+            reportingViewModel.FileReadStatus = $"reading file path {filePath}";
+            var AllFileLines = new List<string>();
             AllFileLines = System.IO.File.ReadAllLines(filePath).ToList();
             AllFileLines.RemoveAt(0);
-            ContentsTextBox.Text = "";
+            reportingViewModel.FileContentsOutput = "";
             var ordered = AllFileLines.Select(s => new { Str = s, Split = s.Split(',') })
                 .OrderBy(x => int.Parse(x.Split[0]))
                 //.ThenBy(x => x.Split[1])
@@ -195,7 +275,7 @@ namespace VaersCalculation
             file.ShowDialog();
             if (file.FileNames != null)
             {
-                FileSourceTextBox.Text = file.FileName;
+                reportingViewModel.FileToReadText = file.FileNames[0];
             }
         }
     }
