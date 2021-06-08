@@ -43,6 +43,7 @@ namespace VaersCalculation
             var outputReport = "";
             if (!generateReport)
             {
+
                 ids = await ReadFileContentsAsInts(filePath);
             }
             else
