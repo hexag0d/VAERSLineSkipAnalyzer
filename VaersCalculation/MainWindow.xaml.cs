@@ -119,11 +119,68 @@ namespace VaersCalculation
                     this.OnPropertyChanged();
                 }
             }
+            private int _fileStartLineId = 0;
+            public int FileStartLineId
+            {
+                get { return _fileStartLineId; }
+                set
+                {
+                    _fileStartLineId = value;
+                    this.OnPropertyChanged();
+                }
+            }
+            private int _fileEndLineId = 0;
+            public int FileEndLineId
+            {
+                get { return _fileEndLineId; }
+                set
+                {
+                    _fileEndLineId = value;
+                    this.OnPropertyChanged();
+                }
+            }
+            private double _fileSkippedLinePercentage = 0;
+            public double FileSkippedLinePercentage
+            {
+                get { return _fileSkippedLinePercentage; }
+                set
+                {
+                    _fileSkippedLinePercentage = value;
+                    this.OnPropertyChanged();
+                }
+            }
+            private string _percentFinishedProcessing = "0";
+            public string PercentFinishedProcessing
+            {
+                get { return _percentFinishedProcessing; }
+                set
+                {
+                    _percentFinishedProcessing = value;
+                    this.OnPropertyChanged();
+                }
+            }
+        }
+
+        public string GetFinishedLinePercentage(int currentLine, int totalLines)
+        {
+            try
+            {
+                var percentFinished = $"{((double)currentLine / (double)totalLines) * 100}";
+                return percentFinished.Substring(0, 6);
+            }
+            catch
+            {
+                return "100"; // only happens when double hits 100, need to fix this
+            }
+        }
+
+        public double GetSkippedLinePercentage (double filledLines, double totalLines)
+        {
+            return 0;
         }
 
         private void ReadFileButton_Click(object sender, RoutedEventArgs e)
         {
-            ClearUiValues();
             PerformLineCalculationDiff(FileSourceTextBox.Text, (bool)GenerateFullIdReportCheckBox.IsChecked);
         }
         
@@ -180,10 +237,12 @@ namespace VaersCalculation
                     {
                         previousLineId = Convert.ToInt32(vaersLines.First().Split(',')[0]);
                         recordId = Convert.ToInt32(vaersLines.First().Split(',')[0]);
+                        reportingViewModel.FileStartLineId = previousLineId;
+                        reportingViewModel.FileEndLineId = Convert.ToInt32(vaersLines.Last().Split(',')[0]);
                     }
                     catch (Exception ex)
                     {
-                        reportingViewModel.FileReadStatus = $"File input was not recognized, check your csv. Error: {ex.Message}";
+                        reportingViewModel.FileReadStatus = $"File input was not recognized; check your csv. Error: {ex.Message}";
                         return;
                     }
                     foreach (var vaersLine in vaersLines)
@@ -206,6 +265,7 @@ namespace VaersCalculation
                             });
                         }
                         lineNumber++;
+                        reportingViewModel.PercentFinishedProcessing = GetFinishedLinePercentage(recordId, reportingViewModel.FileEndLineId);
                         SetContentsText(recordId.ToString() + " | " + lineDate + $" | line #: {lineNumber}" + "\n");
                         previousLineDate = lineDate;
                         previousLineId = recordId;
@@ -236,11 +296,6 @@ namespace VaersCalculation
             return outputReport;
         }
 
-        public void ClearUiValues()
-        {
-            
-        }
-
         public Task<List<int>> ReadFileContentsAsInts(string filePath)
         {
             StatusTextBox.Text = $"reading file path {filePath}";
@@ -261,7 +316,16 @@ namespace VaersCalculation
         {
             reportingViewModel.FileReadStatus = $"reading file path {filePath}";
             var AllFileLines = new List<string>();
-            AllFileLines = System.IO.File.ReadAllLines(filePath).ToList();
+            try
+            {
+                AllFileLines = System.IO.File.ReadAllLines(filePath).ToList();
+
+            }
+            catch (Exception ex)
+            {
+                reportingViewModel.FileReadStatus = ex.Message;
+                return Task.FromResult(AllFileLines);
+            }
             AllFileLines.RemoveAt(0);
             reportingViewModel.FileContentsOutput = "";
             var ordered = AllFileLines.Select(s => new { Str = s, Split = s.Split(',') })
@@ -281,5 +345,6 @@ namespace VaersCalculation
                 reportingViewModel.FileToReadText = file.FileNames[0];
             }
         }
+
     }
 }
