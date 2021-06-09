@@ -6,22 +6,35 @@
         xmlns:local="clr-namespace:VaersCalculation"
         mc:Ignorable="d"
         Title="VAERS SKIP DATA ANALYZER" Height="450" Width="800">
-  
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="68*"/>
             <ColumnDefinition Width="723*"/>
         </Grid.ColumnDefinitions>
-        <TextBox x:Name="ContentsTextBox" Margin="10,169,10.4,9.8" TextWrapping="Wrap" AcceptsReturn="True" Grid.ColumnSpan="2" VerticalScrollBarVisibility="Visible" FontSize="16px" Text="Line by line audit will appear here"/>
+        <TextBox x:Name="ContentsTextBox" Margin="10,169,10.4,9.8" TextWrapping="Wrap" AcceptsReturn="True" Grid.ColumnSpan="2" VerticalScrollBarVisibility="Visible" FontSize="16px" Text="{Binding FileContentsOutput, Mode=TwoWay}"/>
         <Button x:Name="ReadFileButton" Content="Read File" HorizontalAlignment="Right" Margin="0,10,252.4,0" VerticalAlignment="Top" Width="75" RenderTransformOrigin="1.97,-0.618" Click="ReadFileButton_Click" Grid.Column="1"/>
         <TextBox x:Name="CurrentLineTextBox" HorizontalAlignment="Left" Height="23" Margin="67.267,38,0,0" TextWrapping="Wrap" Text="CurrentLine" VerticalAlignment="Top" Width="120" Grid.Column="1" Visibility="Hidden"/>
-        <TextBox x:Name="FileSourceTextBox" HorizontalAlignment="Left" Height="23" Margin="-58,10,0,0" TextWrapping="Wrap" Text="C:/data/2021VAERSData.csv" VerticalAlignment="Top" Width="316" Grid.Column="1"/>
+        <TextBox x:Name="FileSourceTextBox" HorizontalAlignment="Left" Height="23" Margin="-58,10,0,0" TextWrapping="Wrap" Text="{Binding FileToReadText, Mode=TwoWay}" VerticalAlignment="Top" Width="316" Grid.Column="1"/>
         <Button x:Name="GetMissingLinesButton" Content="Get Missing Lines" HorizontalAlignment="Left" Margin="-57.733,42,0,0" VerticalAlignment="Top" Width="120" Grid.Column="1" Visibility="Hidden"/>
-        <TextBox x:Name="StatusTextBox" Height="94" Margin="-53,42,0,0" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Left" Width="120" Grid.Column="1" FontSize="16px"/>
-        <TextBox x:Name="TotalSkippedIdsTextBox" HorizontalAlignment="Left" Height="23" Margin="-53,141,0,0" TextWrapping="Wrap" Text="Total Skipped Ids" VerticalAlignment="Top" Width="120" Grid.Column="1" FontSize="16px"/>
+        <TextBox x:Name="StatusTextBox" Height="66" Margin="111,39,0,0" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Left" Width="138" Grid.Column="1" FontSize="16px" Text="{Binding FileReadStatus, Mode=OneWay}"/>
+        <TextBox x:Name="TotalSkippedIdsTextBox" HorizontalAlignment="Left" Height="23" Margin="129,138,0,0" TextWrapping="Wrap" Text="{Binding TotalLinesSkipped, Mode=TwoWay}" VerticalAlignment="Top" Width="120" Grid.Column="1" FontSize="16px"/>
         <Button x:Name="VAERSCsvFileChooser" Content="VAERS CSV" Grid.Column="1" Margin="263,10,332.4,0" VerticalAlignment="Top" Click="VAERSCsvFileChooser_Click"/>
-        <TextBox x:Name="ReportTextBox" VerticalScrollBarVisibility="Visible" Grid.Column="1" Height="126" Margin="83,38,10.4,0" TextWrapping="Wrap" Text="Report will appear here (if checked)" VerticalAlignment="Top" FontSize="16px"/>
+        <TextBox x:Name="ReportTextBox" VerticalScrollBarVisibility="Visible" Grid.Column="1" Height="126" Margin="254,38,10.4,0" TextWrapping="Wrap" Text="{Binding AggregateReportOut, Mode=TwoWay}" VerticalAlignment="Top" FontSize="16px"/>
         <CheckBox x:Name="GenerateFullIdReportCheckBox" Content="generate report" Grid.Column="1" HorizontalAlignment="Right" Margin="0,13,10.4,0" VerticalAlignment="Top" IsChecked="True"/>
+        <Label Content="Start Line#" Margin="10,39,-7,0" VerticalAlignment="Top"/>
+        <Label Content="Last Line#" Margin="10,65,-7,0" VerticalAlignment="Top"/>
+        <TextBox Name="FirstLineTextBox" Grid.Column="1" HorizontalAlignment="Left" Height="23" Margin="7,38,0,0" TextWrapping="Wrap" Text="{Binding FileStartLineId, Mode=OneWay}" VerticalAlignment="Top" Width="99"/>
+        <TextBox Name="LastLineTextBox" Grid.Column="1" HorizontalAlignment="Left" Height="23" Margin="10,66,0,0" TextWrapping="Wrap" Text="{Binding FileEndLineId, Mode=OneWay}" VerticalAlignment="Top" Width="96"/>
+        <Label Content="Finished:" Margin="10,95,-7,0" VerticalAlignment="Top"/>
+        <TextBox Name="ProcessingFinishedPercentageTextBox" Grid.Column="1" HorizontalAlignment="Left" Height="23" Margin="-7,92,0,0" TextWrapping="Wrap" Text="{Binding PercentFinishedProcessing, Mode=OneWay}" VerticalAlignment="Top" Width="50"/>
+        <Label Content="Total Skipped Lines" Grid.Column="1" HorizontalAlignment="Left" Margin="17,139,0,0" VerticalAlignment="Top"/>
+        <Label Content="%" Grid.Column="1" HorizontalAlignment="Left" Margin="48,93,0,0" VerticalAlignment="Top"/>
+        <Label Content="Lines to be processed" Margin="43,111,0,0" VerticalAlignment="Top" Grid.Column="1" HorizontalAlignment="Left" Height="24" Width="118"/>
+        <TextBox x:Name="LinesToBeProcessedTextBox" Grid.Column="1" Text="{Binding FileLinesToBeProcessed, Mode=OneWay}" HorizontalAlignment="Left" Height="23" Margin="159,110,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="90"/>
+        <TextBox x:Name="LineSkipPercentageTextBox" HorizontalAlignment="Right" Height="23" Margin="0,119,-24,0" TextWrapping="Wrap" Text="{Binding FileSkippedLinePercentage, Mode=OneWay}" VerticalAlignment="Top" Width="52"/>
+        <Label Content="Skip" Margin="10,120,21,0" VerticalAlignment="Top" d:LayoutOverrides="Width"/>
+        <Label Content="%" Grid.Column="1" HorizontalAlignment="Left" Margin="24,118,0,0" VerticalAlignment="Top"/>
 
     </Grid>
+
 </Window>
