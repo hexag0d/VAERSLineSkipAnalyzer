@@ -1,20 +1,12 @@
 ﻿using Microsoft.Win32;
+using Microsoft.WindowsAPICodePack.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace VaersCalculation
 {
@@ -27,16 +19,17 @@ namespace VaersCalculation
         {
             TotalLinesSkipped = 0,
             AggregateReportOut = "Report will appear here (if checked)",
-            FileToReadText = "C:/data/2021VAERSData.csv"
+            FileToReadText = "C:/data/2021VAERSData.csv",
+            OutputReportFolderPath = "C:/data/"
         };
-        
+
         public MainWindow()
         {
             InitializeComponent();
             this.DataContext = reportingViewModel;
         }
 
-        public class VaersRecord 
+        public class VaersRecord
         {
             public string PreviousLineDate { get; set; }
             public string LineDate { get; set; }
@@ -45,7 +38,7 @@ namespace VaersCalculation
             public int SkippedLinesAtThisId { get; set; }
             public int LineId { get; set; }
         }
-        
+
         public static int scrollContentsLineChangedCount = 0;
 
         public void SetContentsText(string text)
@@ -53,7 +46,7 @@ namespace VaersCalculation
             reportingViewModel.FileContentsOutput = text + reportingViewModel.FileContentsOutput;
             //if (scrollContentsLineChangedCount > 10)
             //{
-                
+
             //    //Application.Current.Dispatcher.Invoke(() => { this.ContentsTextBox.ScrollToEnd(); });
             //    scrollContentsLineChangedCount = 0;
             //    return;
@@ -107,6 +100,14 @@ namespace VaersCalculation
                 {
                     _fileToReadText = value;
                     this.OnPropertyChanged();
+                    try
+                    {
+                        _fileModifiedWhen = System.IO.File.GetLastWriteTime(value).ToString().Split('\\').Last().Replace('/', '_').Replace(' ', '_').Replace(':', '_');
+                    }
+                    catch
+                    {
+                        
+                    }
                 }
             }
             private string _fileToReadStatus = "";
@@ -169,6 +170,26 @@ namespace VaersCalculation
                     this.OnPropertyChanged();
                 }
             }
+            private string _outputReportFolderPath = "";
+            public string OutputReportFolderPath
+            {
+                get { return _outputReportFolderPath; }
+                set
+                {
+                    _outputReportFolderPath = value;
+                    this.OnPropertyChanged();
+                }
+            }
+            private string _fileModifiedWhen = "";
+            public string FileModifiedWhen
+            {
+                get { return _fileModifiedWhen; }
+                set
+                {
+                    _fileModifiedWhen = value;
+                    this.OnPropertyChanged();
+                }
+            }
         }
 
         public string GetFinishedLinePercentage(int currentLine, double totalLines)
@@ -187,7 +208,7 @@ namespace VaersCalculation
         {
             try
             {
-                return ($"{((double)skippedLines / (double)lineNumber) * 100}").Substring(0,6);
+                return ($"{((double)skippedLines / (double)lineNumber) * 100}").Substring(0, 6);
             }
             catch
             {
@@ -199,7 +220,7 @@ namespace VaersCalculation
         {
             PerformLineCalculationDiff(FileSourceTextBox.Text, (bool)GenerateFullIdReportCheckBox.IsChecked);
         }
-        
+
 
         public async void PerformLineCalculationDiff(string filePath, bool generateReport = false)
         {
@@ -308,9 +329,9 @@ namespace VaersCalculation
                 $"Id/Date range = {startLineId} ({startDate}) => {endLineId} ({endDate})" + "\n" +
                 $"which makes for a total of {realLineTotal} IDs in range. " + "\n" +
                 $"the total percentage of skipped Ids relative to lines is: " +
-                $"{((double)totalSkippedLines/(double)totalLines) * 100}%" + "\n" + 
+                $"{((double)totalSkippedLines / (double)totalLines) * 100}%" + "\n" +
                 $"==========begin detail============" + "\n";
-            
+
             foreach (var record in records)
             {
                 outputReport += $"{record.SkippedLinesAtThisId} Missing IDs@ {record.Id} from {record.PreviousLineDate} => {record.LineDate} of total {record.TotalLinesSkipped}" + "\n";
@@ -366,7 +387,61 @@ namespace VaersCalculation
             {
                 reportingViewModel.FileToReadText = file.FileNames[0];
             }
+
         }
 
+        public static string SelectedFileDateTimeCreated = "";
+
+        private void SelectAnOutputFolderButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                CommonOpenFileDialog dialog = new CommonOpenFileDialog();
+                dialog.InitialDirectory = "C:\\";
+                dialog.IsFolderPicker = true;
+                if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
+                {
+                    reportingViewModel.OutputReportFolderPath = $"{dialog.FileName}\\";
+                }
+            }
+            catch (Exception ex)
+            {
+                reportingViewModel.FileReadStatus = ex.Message;
+            }
+        }
+
+        private void WriteReportsToFilesButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                WriteReportsToFiles(reportingViewModel.FileContentsOutput, reportingViewModel.AggregateReportOut, reportingViewModel.OutputReportFolderPath);
+            }
+            catch (Exception ex)
+            {
+                reportingViewModel.FileReadStatus = ex.Message;
+            }
+
+        }
+
+        public void WriteReportsToFiles(string fileContentsOutput, string aggregateReportOut, string folderPath, bool combineReports = false)
+        {
+            if (!combineReports)
+            {
+                if (fileContentsOutput != null)
+                {
+                    System.IO.File.WriteAllText($"{folderPath}{GenerateFileName("FileContentsOutput", reportingViewModel.FileModifiedWhen)}", fileContentsOutput);
+                }
+                if (aggregateReportOut != null)
+                {
+                    System.IO.File.WriteAllText($"{folderPath}{GenerateFileName("AggregateVAERSReport", reportingViewModel.FileModifiedWhen)}", aggregateReportOut);
+
+                }
+            }
+        }
+
+        public string GenerateFileName(string desiredName, string fileModifiedWhen)
+        {
+            return $"{desiredName}_{fileModifiedWhen}_{DateTime.Now.ToString().Replace('/', '_').Replace(' ', '_').Replace(':', '_')}_analyzed_by_hexagod_VAERSCalculation.txt";
+        }
     }
 }
