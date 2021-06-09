@@ -37,6 +37,7 @@
         <TextBox x:Name="OutputFolderTextBox" Text="{Binding OutputReportFolderPath, Mode=TwoWay}" Grid.Column="1" Height="23" Margin="418,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Left" Width="120"/>
         <Button x:Name="SelectAnOutputFolderButton" Content="Select an Output Folder>>" Grid.Column="1" Margin="281,10,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="132" Click="SelectAnOutputFolderButton_Click"/>
         <Button x:Name="WriteReportsToFilesButton" Content="Write Reports to Files" Grid.Column="1" HorizontalAlignment="Left" Margin="543,13,0,0" VerticalAlignment="Top" Width="115" Click="WriteReportsToFilesButton_Click"/>
+        <CheckBox x:Name="ForceWindowTopMostCheckBox" Content="top" Grid.Column="1" HorizontalAlignment="Right" Margin="0,10,10.4,0" VerticalAlignment="Top" Checked="ForceWindowTopMostCheckBox_Checked" IsChecked="{Binding WindowForceTopMost, Mode=TwoWay}" Unchecked="ForceWindowTopMostCheckBox_Unchecked" />
 
     </Grid>
 

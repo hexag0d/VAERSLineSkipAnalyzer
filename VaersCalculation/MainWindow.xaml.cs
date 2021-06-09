@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace VaersCalculation
 {
@@ -23,10 +24,18 @@ namespace VaersCalculation
             OutputReportFolderPath = "C:/data/"
         };
 
+        private static CheckBox _forceWindowTopMostCheckBox; 
+
         public MainWindow()
         {
             InitializeComponent();
             this.DataContext = reportingViewModel;
+            
+        }
+
+        public void SetTopMostWindowFromCheck(bool topmost)
+        {
+            
         }
 
         public class VaersRecord
@@ -188,6 +197,17 @@ namespace VaersCalculation
                 {
                     _fileModifiedWhen = value;
                     this.OnPropertyChanged();
+                }
+            }
+            private bool _windowForceTopMost = false;
+            public bool WindowForceTopMost
+            {
+                get { return _windowForceTopMost; }
+                set
+                {
+                    _windowForceTopMost = value;
+                    this.OnPropertyChanged();
+                   
                 }
             }
         }
@@ -381,11 +401,19 @@ namespace VaersCalculation
 
         private void VAERSCsvFileChooser_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog file = new OpenFileDialog();
-            file.ShowDialog();
-            if (file.FileNames != null)
+            try
             {
-                reportingViewModel.FileToReadText = file.FileNames[0];
+                OpenFileDialog file = new OpenFileDialog();
+                file.ShowDialog();
+                if (file.FileNames != null)
+                {
+                    reportingViewModel.FileToReadText = file.FileNames[0];
+                }
+
+            }
+            catch
+            {
+
             }
 
         }
@@ -442,6 +470,17 @@ namespace VaersCalculation
         public string GenerateFileName(string desiredName, string fileModifiedWhen)
         {
             return $"{desiredName}_{fileModifiedWhen}_{DateTime.Now.ToString().Replace('/', '_').Replace(' ', '_').Replace(':', '_')}_analyzed_by_hexagod_VAERSCalculation.txt";
+        }
+
+        private void ForceWindowTopMostCheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            this.Topmost = Convert.ToBoolean(reportingViewModel.WindowForceTopMost);
+        }
+
+        private void ForceWindowTopMostCheckBox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            this.Topmost = Convert.ToBoolean(reportingViewModel.WindowForceTopMost);
+
         }
     }
 }
