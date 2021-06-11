@@ -21,21 +21,14 @@ namespace VaersCalculation
             TotalLinesSkipped = 0,
             AggregateReportOut = "Report will appear here (if checked)",
             FileToReadText = "C:/data/2021VAERSData.csv",
-            OutputReportFolderPath = "C:/data/"
+            OutputReportFolderPath = "C:/data/",
+            ReadFullLine = true
         };
-
-        private static CheckBox _forceWindowTopMostCheckBox; 
 
         public MainWindow()
         {
             InitializeComponent();
             this.DataContext = reportingViewModel;
-            
-        }
-
-        public void SetTopMostWindowFromCheck(bool topmost)
-        {
-            
         }
 
         public class VaersRecord
@@ -53,15 +46,9 @@ namespace VaersCalculation
         public void SetContentsText(string text)
         {
             reportingViewModel.FileContentsOutput = text + reportingViewModel.FileContentsOutput;
-            //if (scrollContentsLineChangedCount > 10)
-            //{
-
-            //    //Application.Current.Dispatcher.Invoke(() => { this.ContentsTextBox.ScrollToEnd(); });
-            //    scrollContentsLineChangedCount = 0;
-            //    return;
-            //}
-            //scrollContentsLineChangedCount++;
         }
+        //public delegate void FileProcessingEventDelegate(ProcessingEventArgs _args);
+        //public event FileProcessingEventDelegate Progress;
 
         public class UIViewModel : INotifyPropertyChanged
         {
@@ -115,7 +102,7 @@ namespace VaersCalculation
                     }
                     catch
                     {
-                        
+
                     }
                 }
             }
@@ -207,7 +194,63 @@ namespace VaersCalculation
                 {
                     _windowForceTopMost = value;
                     this.OnPropertyChanged();
-                   
+
+                }
+            }
+            private bool _readFullLine = false;
+            public bool ReadFullLine
+            {
+                get { return _readFullLine; }
+                set
+                {
+                    _readFullLine = value;
+                    this.OnPropertyChanged();
+                }
+            }
+            private bool _fullSearchReadCached = false;
+            public bool FullSearchReadCached
+            {
+                get { return _fullSearchReadCached; }
+                set { _fullSearchReadCached = value; }
+            }
+            private string _searchBarText = "";
+            public string SearchBarText
+            {
+                get { return _searchBarText; }
+                set
+                {
+                    _searchBarText = value;
+                    this.OnPropertyChanged();
+                }
+            }
+            private int _totalSearchHitsText = 0;
+            public int TotalSearchHitsText
+            {
+                get { return _totalSearchHitsText; }
+                set
+                {
+                    _totalSearchHitsText = value;
+                    this.OnPropertyChanged();
+                }
+            }
+            private int _totalSearchRecordsProcessed = 0;
+            public int TotalSearchRecordsProcessed
+            {
+                get { return _totalSearchRecordsProcessed; }
+                set
+                {
+                    _totalSearchRecordsProcessed = value;
+                    this.OnPropertyChanged();
+                }
+            }
+            private int _totalReportedLines = 0;
+            public int TotalReportedLines
+            {
+                get { return _totalReportedLines; }
+                set
+                {
+                    _totalReportedLines = value;
+                    this.OnPropertyChanged();
                 }
             }
         }
@@ -241,9 +284,11 @@ namespace VaersCalculation
             PerformLineCalculationDiff(FileSourceTextBox.Text, (bool)GenerateFullIdReportCheckBox.IsChecked);
         }
 
+        private bool _lineCalculationDiffInProgress = false;
 
         public async void PerformLineCalculationDiff(string filePath, bool generateReport = false)
         {
+            _lineCalculationDiffInProgress = true;
             var ids = new List<int>();
             var vaersLines = new List<string>();
             reportingViewModel.TotalLinesSkipped = 0;
@@ -263,6 +308,7 @@ namespace VaersCalculation
             catch (Exception ex)
             {
                 reportingViewModel.FileReadStatus = ex.Message;
+                _lineCalculationDiffInProgress = false;
                 return;
             }
 
@@ -304,38 +350,86 @@ namespace VaersCalculation
                         reportingViewModel.FileEndLineId = Convert.ToInt32(vaersLines.Last().Split(',')[0]);
                         reportingViewModel.FileLinesToBeProcessed = reportingViewModel.FileEndLineId - reportingViewModel.FileStartLineId;
                         linesToBeProcessedDouble = Convert.ToDouble(reportingViewModel.FileLinesToBeProcessed);
+                        //this.Progress.Invoke(new ProcessingEventArgs());
                     }
                     catch (Exception ex)
                     {
                         reportingViewModel.FileReadStatus = $"File input was not recognized; check your csv. Error: {ex.Message}";
                         return;
                     }
-                    foreach (var vaersLine in vaersLines)
+                    if (reportingViewModel.ReadFullLine) //check this only once because checking inside the loop will slow an already slow process
                     {
-                        recordId = Convert.ToInt32(vaersLine.Split(',')[0]);
-                        var lineDiff = Convert.ToInt32(recordId) - Convert.ToInt32(previousLineId);
-                        lineDate = vaersLine.Split(',')[1];
-                        if (lineDiff > 1)
+                        foreach (var vaersLine in vaersLines)
                         {
-                            reportingViewModel.TotalLinesSkipped += lineDiff - 1;
-                            SetContentsText($"<<<<<<<<<< {lineDiff - 1} Skipped, total {reportingViewModel.TotalLinesSkipped}, range {previousLineDate}=>{lineDate}>>>>>>>>>" + "\n");
-                            missingDatePairsById.Add(new VaersRecord
+                            recordId = Convert.ToInt32(vaersLine.Split(',')[0]);
+                            var lineDiff = Convert.ToInt32(recordId) - Convert.ToInt32(previousLineId);
+                            lineDate = vaersLine.Split(',')[1];
+                            if (lineDiff > 1)
                             {
-                                Id = recordId,
-                                PreviousLineDate = previousLineDate,
-                                LineDate = lineDate,
-                                TotalLinesSkipped = reportingViewModel.TotalLinesSkipped,
-                                SkippedLinesAtThisId = lineDiff - 1,
-                                LineId = lineNumber
-                            });
+                                reportingViewModel.TotalLinesSkipped += lineDiff - 1;
+                                SetContentsText($"<<<<<<<<<< {lineDiff - 1} Skipped, total {reportingViewModel.TotalLinesSkipped}, range {previousLineDate}=>{lineDate}>>>>>>>>>" + "\n");
+                                missingDatePairsById.Add(new VaersRecord
+                                {
+                                    Id = recordId,
+                                    PreviousLineDate = previousLineDate,
+                                    LineDate = lineDate,
+                                    TotalLinesSkipped = reportingViewModel.TotalLinesSkipped,
+                                    SkippedLinesAtThisId = lineDiff - 1,
+                                    LineId = lineNumber
+                                });
+                            }
+                            lineNumber++;
+                            reportingViewModel.PercentFinishedProcessing = GetFinishedLinePercentage(lineNumber + reportingViewModel.TotalLinesSkipped, linesToBeProcessedDouble);
+                            reportingViewModel.FileSkippedLinePercentage = GetSkippedLinePercentage(reportingViewModel.TotalLinesSkipped, lineNumber);
+                            SetContentsText(vaersLine + "\n" + "\n");
+                            CachedTextToSearch.Add(vaersLine + "\n" + "\n");
+                            reportingViewModel.TotalReportedLines = lineNumber;
+                            //if (!vaersLine.Split(',')[9].StartsWith("\"")) // the structure is too random so this doesn't make any sense
+                            //{
+                            //    SetContentsText(recordId.ToString() + " | " + lineDate + $" | line #: {lineNumber} | report: {vaersLine.Split(',')[9]}" + "\n");
+                            //    CachedTextToSearch.Add($"{recordId.ToString()} | {lineDate} | line #: {lineNumber} | report: {vaersLine.Split(',')[9]}" + "\n");
+                            //}
+                            //else
+                            //{
+                            //    SetContentsText(recordId.ToString() + " | " + lineDate + $" | line #: {lineNumber} | report: {vaersLine.Split('"')[1]}" + "\n");
+                            //    CachedTextToSearch.Add($"{recordId.ToString()} | {lineDate} | line #: {lineNumber} | report: {vaersLine.Split('"')[1]}" + "\n");
+                            //}
+                            previousLineDate = lineDate;
+                            previousLineId = recordId;
                         }
-                        lineNumber++;
-                        reportingViewModel.PercentFinishedProcessing = GetFinishedLinePercentage(lineNumber + reportingViewModel.TotalLinesSkipped, linesToBeProcessedDouble);
-                        reportingViewModel.FileSkippedLinePercentage = GetSkippedLinePercentage(reportingViewModel.TotalLinesSkipped, lineNumber);
-                        SetContentsText(recordId.ToString() + " | " + lineDate + $" | line #: {lineNumber}" + "\n");
-                        previousLineDate = lineDate;
-                        previousLineId = recordId;
                     }
+                    else
+                    {
+                        foreach (var vaersLine in vaersLines)
+                        {
+                            recordId = Convert.ToInt32(vaersLine.Split(',')[0]);
+                            var lineDiff = Convert.ToInt32(recordId) - Convert.ToInt32(previousLineId);
+                            lineDate = vaersLine.Split(',')[1];
+                            if (lineDiff > 1)
+                            {
+                                reportingViewModel.TotalLinesSkipped += lineDiff - 1;
+                                SetContentsText($"<<<<<<<<<< {lineDiff - 1} Skipped, total {reportingViewModel.TotalLinesSkipped}, range {previousLineDate}=>{lineDate}>>>>>>>>>" + "\n");
+                                missingDatePairsById.Add(new VaersRecord
+                                {
+                                    Id = recordId,
+                                    PreviousLineDate = previousLineDate,
+                                    LineDate = lineDate,
+                                    TotalLinesSkipped = reportingViewModel.TotalLinesSkipped,
+                                    SkippedLinesAtThisId = lineDiff - 1,
+                                    LineId = lineNumber
+                                });
+                            }
+                            lineNumber++;
+                            reportingViewModel.PercentFinishedProcessing = GetFinishedLinePercentage(lineNumber + reportingViewModel.TotalLinesSkipped, linesToBeProcessedDouble);
+                            reportingViewModel.FileSkippedLinePercentage = GetSkippedLinePercentage(reportingViewModel.TotalLinesSkipped, lineNumber);
+                            SetContentsText(recordId.ToString() + " | " + lineDate + $" | line #: {lineNumber}" + "\n");
+                            CachedTextToSearch.Add($"{recordId.ToString()} | {lineDate} | line #: {lineNumber}" + "\n");
+                            previousLineDate = lineDate;
+                            previousLineId = recordId;
+                            reportingViewModel.TotalReportedLines = lineNumber;
+                        }
+                    }
+                    _lineCalculationDiffInProgress = false;
                     reportingViewModel.AggregateReportOut = GenerateOutputReport(missingDatePairsById, reportingViewModel.TotalLinesSkipped, lineNumber, linesToBeProcessedDouble, reportingViewModel.FileStartLineId, reportingViewModel.FileEndLineId, startDate, endDate);
                 }
             });
@@ -393,7 +487,6 @@ namespace VaersCalculation
             reportingViewModel.FileContentsOutput = "";
             var ordered = AllFileLines.Select(s => new { Str = s, Split = s.Split(',') })
                 .OrderBy(x => int.Parse(x.Split[0]))
-                //.ThenBy(x => x.Split[1])
                 .Select(x => x.Str)
                 .ToList();
             return Task.FromResult(ordered);
@@ -451,18 +544,24 @@ namespace VaersCalculation
 
         }
 
-        public void WriteReportsToFiles(string fileContentsOutput, string aggregateReportOut, string folderPath, bool combineReports = false)
+        public void WriteReportsToFiles(string fileContentsOutput, string aggregateReportOut, string folderPath, bool combineReports = false, string searchString = "")
         {
             if (!combineReports)
             {
                 if (fileContentsOutput != null)
                 {
-                    System.IO.File.WriteAllText($"{folderPath}{GenerateFileName("FileContentsOutput", reportingViewModel.FileModifiedWhen)}", fileContentsOutput);
+                    if (searchString == "")
+                    {
+                        System.IO.File.WriteAllText($"{folderPath}{GenerateFileName("FileContentsOutput", reportingViewModel.FileModifiedWhen)}", fileContentsOutput);
+                    }
+                    else
+                    {
+                        System.IO.File.WriteAllText($"{folderPath}{GenerateFileName($"VAERS_Search:{searchString}", reportingViewModel.FileModifiedWhen)}", fileContentsOutput);
+                    }
                 }
                 if (aggregateReportOut != null)
                 {
                     System.IO.File.WriteAllText($"{folderPath}{GenerateFileName("AggregateVAERSReport", reportingViewModel.FileModifiedWhen)}", aggregateReportOut);
-
                 }
             }
         }
@@ -481,6 +580,149 @@ namespace VaersCalculation
         {
             this.Topmost = Convert.ToBoolean(reportingViewModel.WindowForceTopMost);
 
+        }
+
+        private static bool _searchInProgress = false;
+        public static bool SearchInProgress { get; set; }
+
+        public static List<string> CachedTextToSearch = new List<string>();
+
+        private void SearchLinesTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (!_lineCalculationDiffInProgress)
+            {
+                if (!_searchInProgress)
+                {
+                    _searchInProgress = true;
+                }
+                SearchStringForContents(CachedTextToSearch, SearchLinesTextBox.Text);
+            }
+        }
+
+        private static bool _searchTermsChangedDuringSearch = false;
+        public static bool SearchTermsChangedDuringSearch
+        {
+            get { return _searchTermsChangedDuringSearch; }
+            set
+            {
+                _searchTermsChangedDuringSearch = value;
+            }
+        }
+
+        public static string CachedLatestSearchTerms = null;
+        public static List<string> CachedLatestSearchTermList = null;
+        public static bool LatestSearchIncludesMultipleTerms = false;
+
+
+
+        public async void SearchStringForContents(List<string> contentsToSearch, string searchTerms)
+        {
+            List<string> searchTermList = new List<string>();
+            CachedLatestSearchTerms = searchTerms;
+            reportingViewModel.TotalSearchHitsText = 0;
+            reportingViewModel.TotalSearchRecordsProcessed = 0;
+            if (searchTerms.Contains(" OR ") || searchTerms.Contains(" AND ")) // this only works with OR right now
+            {
+                LatestSearchIncludesMultipleTerms = true;
+                if (searchTerms.Contains(" AND ") && !searchTerms.Contains(" OR "))
+                {
+                    foreach (var term in searchTerms.Split(new string[] { "AND" }, StringSplitOptions.None).ToList())
+                    {
+                        if (term != "")
+                        {
+                            searchTermList.Add(term);
+                        }
+                    }
+                }
+                else // contains only ORs or both AND OR
+                {
+                    foreach (var term in searchTerms.Split(new string[] { " OR " }, StringSplitOptions.None).ToList())
+                    {
+                        if (term != "")
+                        {
+                            searchTermList.Add(term);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                LatestSearchIncludesMultipleTerms = false;
+            }
+            reportingViewModel.FileContentsOutput = "";
+            _searchInProgress = true;
+            if (searchTermList.Count <= 1) // only one search term, runs slightly faster due to no list splitting
+            {
+                await Task.Factory.StartNew(() =>
+                {
+                    foreach (var line in contentsToSearch)
+                    {
+                        if (CachedLatestSearchTerms != searchTerms)
+                        {
+                            return;
+                        }
+                        if (line.ToLower().Contains(searchTerms.ToLower()))
+                        {
+                            SetSearchHitMatch(line);
+                        }
+                        reportingViewModel.TotalSearchRecordsProcessed++;
+                    }
+                });
+            }
+            else
+            {
+                await Task.Factory.StartNew(() =>
+                {
+                    foreach (var line in contentsToSearch)
+                    {
+                        foreach (var searchTerm in searchTermList)
+                        {
+                            if (searchTerms != CachedLatestSearchTerms)
+                            {
+                                return;
+                            }
+                            if (!searchTerm.Contains(" AND "))
+                            {
+                                if (line.ToLower().Contains(searchTerm.ToLower()))
+                                {
+                                    SetSearchHitMatch(line);
+                                    break;
+                                }
+                            }
+                            else // means we have AND and OR
+                                // not finished; I might just use linq for this instead of reinventing the wheel
+                            {
+                                var andConditions = searchTerm.Split(new string[] { "AND" }, StringSplitOptions.None);
+                                var andConditionLength = andConditions.Length;
+                                var andContitionsMet = 0;
+                                foreach (var andCondition in andConditions)
+                                {
+                                    if (searchTerms != CachedLatestSearchTerms)
+                                    {
+                                        return;
+                                    }
+                                    if (line.Contains(andCondition))
+                                    {
+                                        andContitionsMet++;
+                                    } 
+                                    if (andContitionsMet == andConditionLength)
+                                    {
+                                        SetSearchHitMatch(line);
+                                    }
+                                }
+                            }
+                        }
+                        reportingViewModel.TotalSearchRecordsProcessed++;
+                    }
+                });
+            }
+            _searchInProgress = false;
+        }
+
+        public void SetSearchHitMatch(string line)
+        {
+            reportingViewModel.FileContentsOutput = line + reportingViewModel.FileContentsOutput;
+            reportingViewModel.TotalSearchHitsText++;
         }
     }
 }
