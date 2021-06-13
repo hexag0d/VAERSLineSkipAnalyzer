@@ -29,24 +29,28 @@
         <TextBox Name="ProcessingFinishedPercentageTextBox" Grid.Column="1" HorizontalAlignment="Left" Height="23" Margin="-7,92,0,0" TextWrapping="Wrap" Text="{Binding PercentFinishedProcessing, Mode=OneWay}" VerticalAlignment="Top" Width="50"/>
         <Label Content="Total Skipped Lines" Grid.Column="1" HorizontalAlignment="Left" Margin="17,139,0,0" VerticalAlignment="Top"/>
         <Label Content="%" Grid.Column="1" HorizontalAlignment="Left" Margin="48,93,0,0" VerticalAlignment="Top"/>
-        <Label Content="Lines to be processed" Margin="43,111,0,0" VerticalAlignment="Top" Grid.Column="1" HorizontalAlignment="Left" Height="24" Width="118"/>
+        <Label Content="Lines to be processed" Margin="36,116,0,0" VerticalAlignment="Top" Grid.Column="1" HorizontalAlignment="Left" Height="24" Width="118"/>
         <TextBox x:Name="LinesToBeProcessedTextBox" Grid.Column="1" Text="{Binding FileLinesToBeProcessed, Mode=OneWay}" HorizontalAlignment="Left" Height="23" Margin="159,112,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="90"/>
         <TextBox x:Name="LineSkipPercentageTextBox" HorizontalAlignment="Right" Height="23" Margin="0,119,-24,0" TextWrapping="Wrap" Text="{Binding FileSkippedLinePercentage, Mode=OneWay}" VerticalAlignment="Top" Width="52"/>
         <Label Content="Skip" Margin="10,120,21,0" VerticalAlignment="Top" d:LayoutOverrides="Width"/>
-        <Label Content="%" Grid.Column="1" HorizontalAlignment="Left" Margin="24,118,0,0" VerticalAlignment="Top"/>
+        <Label Content="%" Grid.Column="1" HorizontalAlignment="Left" Margin="19,117,0,0" VerticalAlignment="Top"/>
         <TextBox x:Name="OutputFolderTextBox" Text="{Binding OutputReportFolderPath, Mode=TwoWay}" Grid.Column="1" Height="23" Margin="418,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Left" Width="120"/>
         <Button x:Name="SelectAnOutputFolderButton" Content="Select an Output Folder>>" Grid.Column="1" Margin="281,10,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="132" Click="SelectAnOutputFolderButton_Click"/>
         <Button x:Name="WriteReportsToFilesButton" Content="Write Reports to Files" Grid.Column="1" HorizontalAlignment="Left" Margin="543,13,0,0" VerticalAlignment="Top" Width="115" Click="WriteReportsToFilesButton_Click"/>
         <CheckBox x:Name="ForceWindowTopMostCheckBox" Content="top" Grid.Column="1" HorizontalAlignment="Right" Margin="0,10,10.4,0" VerticalAlignment="Top" Checked="ForceWindowTopMostCheckBox_Checked" IsChecked="{Binding WindowForceTopMost, Mode=TwoWay}" Unchecked="ForceWindowTopMostCheckBox_Unchecked" />
         <CheckBox x:Name="ReadWholeLineCheckBox" IsChecked="{Binding ReadFullLine, Mode=TwoWay}" Content="read whole line" Grid.Column="1" HorizontalAlignment="Left" Margin="111,38,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="SearchLinesTextBox" Grid.Column="1" Height="23" Margin="296,139,10.4,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" TextChanged="SearchLinesTextBox_TextChanged" />
+        <TextBox x:Name="SearchLinesTextBox" Grid.Column="1" Height="23" Margin="296,142,10.4,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" TextChanged="SearchLinesTextBox_TextChanged" />
         <Label Content="Search" Grid.Column="1" HorizontalAlignment="Left" Margin="254,140,0,0" VerticalAlignment="Top"/>
         <Label Content="Separate with OR only for now. Surround with a space on each side for whole words  &#xD;&#xA;AND does not work yet" Grid.Column="1" HorizontalAlignment="Left" Margin="262,92,0,0" VerticalAlignment="Top" Height="39"/>
-        <TextBox x:Name="TotalSearchHitsTextBox" Grid.Column="1" HorizontalAlignment="Right" Height="23" Margin="0,113,10.4,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" Text="{Binding TotalSearchHitsText, Mode=OneWay}" />
-        <Label Content="search hits>" Grid.Column="1" HorizontalAlignment="Right" Margin="0,114,130.4,0" VerticalAlignment="Top"/>
-        <ProgressBar Grid.Column="1" Height="10" Margin="268,124,204.4,0" VerticalAlignment="Top" Maximum="{Binding TotalReportedLines, Mode=OneWay}" Minimum="0" Value="{Binding TotalSearchRecordsProcessed, Mode=OneWay}"/>
+        <TextBox x:Name="TotalSearchHitsTextBox" Grid.Column="1" HorizontalAlignment="Right" Height="23" Margin="0,118,188.4,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="66" Text="{Binding TotalSearchHitsText, Mode=OneWay}" />
+        <Label Content="hits" Grid.Column="1" HorizontalAlignment="Right" Margin="0,118,254.4,0" VerticalAlignment="Top"/>
         <Label Content="Reported Lines" Grid.Column="1" HorizontalAlignment="Left" Margin="67,88,0,0" VerticalAlignment="Top" Width="87"/>
         <TextBox Grid.Column="1" HorizontalAlignment="Left" Height="23" Margin="154,87,0,0" TextWrapping="Wrap" Text="{Binding TotalReportedLines, Mode=OneWay}" VerticalAlignment="Top" Width="100"/>
+        <ProgressBar Grid.Column="1" Height="10" Margin="254,130,286.4,0" VerticalAlignment="Top" Maximum="{Binding TotalReportedLines, Mode=OneWay}" Minimum="0" Value="{Binding TotalSearchRecordsProcessed, Mode=OneWay}"/>
+        <Label Content="% records" Grid.Column="1" HorizontalAlignment="Right" Margin="0,118,129.4,0" VerticalAlignment="Top" Width="22"/>
+        <TextBox x:Name="SearchPercentOfRecordsTextBox" Grid.Column="1" HorizontalAlignment="Right" Height="23" Margin="0,118,151.4,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="37" Text="{Binding SearchPercentOfRecords, Mode=OneWay}"/>
+        <Label Content="Approx" Grid.Column="1" HorizontalAlignment="Right" Margin="0,116,89.4,0" VerticalAlignment="Top"/>
+        <TextBox Grid.Column="1" HorizontalAlignment="Right" Height="23" Margin="0,114,0.4,0" TextWrapping="Wrap" Text="{Binding ApproximateHitsBasedOnMissingRecordPercentage, Mode=OneWay}" VerticalAlignment="Top" Width="84"/>
 
     </Grid>
 

@@ -231,6 +231,7 @@ namespace VaersCalculation
                 {
                     _totalSearchHitsText = value;
                     this.OnPropertyChanged();
+                    ApproximateHitsBasedOnMissingRecordPercentage = value + (double)SkippedLineRatioDouble * (double)value;
                 }
             }
             private int _totalSearchRecordsProcessed = 0;
@@ -241,6 +242,14 @@ namespace VaersCalculation
                 {
                     _totalSearchRecordsProcessed = value;
                     this.OnPropertyChanged();
+                    try
+                    {
+                        SearchPercentOfRecords = ((double)TotalSearchHitsText / (double)TotalReportedLines * 100).ToString().Substring(0, 4);
+                    }
+                    catch
+                    {
+
+                    }
                 }
             }
             private int _totalReportedLines = 0;
@@ -253,13 +262,34 @@ namespace VaersCalculation
                     this.OnPropertyChanged();
                 }
             }
+            private string _searchPercentOfRecords = "";
+            public string SearchPercentOfRecords
+            {
+                get { return _searchPercentOfRecords; }
+                set
+                {
+                    _searchPercentOfRecords = value;
+                    this.OnPropertyChanged();
+                }
+            }
+            private double _approximateHitsBasedOnMissingRecordPercentage = 0;
+            public double ApproximateHitsBasedOnMissingRecordPercentage
+            {
+                get { return _approximateHitsBasedOnMissingRecordPercentage; }
+                set
+                {
+                    _approximateHitsBasedOnMissingRecordPercentage = Math.Round(value, 0);
+                    this.OnPropertyChanged();
+                }
+            }
+            public double SkippedLineRatioDouble = 0;
         }
 
         public string GetFinishedLinePercentage(int currentLine, double totalLines)
         {
             try
             {
-                return ($"{((double)currentLine / (double)totalLines) * 100}").Substring(0, 6);
+                return ($"{((double)currentLine / totalLines) * 100}").Substring(0, 6);
             }
             catch
             {
@@ -381,6 +411,7 @@ namespace VaersCalculation
                             lineNumber++;
                             reportingViewModel.PercentFinishedProcessing = GetFinishedLinePercentage(lineNumber + reportingViewModel.TotalLinesSkipped, linesToBeProcessedDouble);
                             reportingViewModel.FileSkippedLinePercentage = GetSkippedLinePercentage(reportingViewModel.TotalLinesSkipped, lineNumber);
+
                             SetContentsText(vaersLine + "\n" + "\n");
                             CachedTextToSearch.Add(vaersLine + "\n" + "\n");
                             reportingViewModel.TotalReportedLines = lineNumber;
@@ -429,6 +460,7 @@ namespace VaersCalculation
                             reportingViewModel.TotalReportedLines = lineNumber;
                         }
                     }
+                    reportingViewModel.SkippedLineRatioDouble = (double)reportingViewModel.TotalLinesSkipped / (double)lineNumber;
                     _lineCalculationDiffInProgress = false;
                     reportingViewModel.AggregateReportOut = GenerateOutputReport(missingDatePairsById, reportingViewModel.TotalLinesSkipped, lineNumber, linesToBeProcessedDouble, reportingViewModel.FileStartLineId, reportingViewModel.FileEndLineId, startDate, endDate);
                 }
@@ -535,7 +567,7 @@ namespace VaersCalculation
         {
             try
             {
-                WriteReportsToFiles(reportingViewModel.FileContentsOutput, reportingViewModel.AggregateReportOut, reportingViewModel.OutputReportFolderPath);
+                WriteReportsToFiles(reportingViewModel.FileContentsOutput, reportingViewModel.AggregateReportOut, reportingViewModel.OutputReportFolderPath, false, reportingViewModel.SearchBarText);
             }
             catch (Exception ex)
             {
@@ -690,7 +722,7 @@ namespace VaersCalculation
                                 }
                             }
                             else // means we have AND and OR
-                                // not finished; I might just use linq for this instead of reinventing the wheel
+                                 // not finished; I might just use linq for this instead of reinventing the wheel
                             {
                                 var andConditions = searchTerm.Split(new string[] { "AND" }, StringSplitOptions.None);
                                 var andConditionLength = andConditions.Length;
@@ -704,7 +736,7 @@ namespace VaersCalculation
                                     if (line.Contains(andCondition))
                                     {
                                         andContitionsMet++;
-                                    } 
+                                    }
                                     if (andContitionsMet == andConditionLength)
                                     {
                                         SetSearchHitMatch(line);
