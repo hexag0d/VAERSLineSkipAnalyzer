@@ -244,7 +244,7 @@ namespace VaersCalculation
                     this.OnPropertyChanged();
                     try
                     {
-                        SearchPercentOfRecords = ((double)TotalSearchHitsText / (double)TotalReportedLines * 100).ToString().Substring(0, 4);
+                        SearchPercentOfRecords = ((double)TotalSearchHitsText / (double)FileLinesToBeProcessed * 100).ToString().Substring(0, 4);
                     }
                     catch
                     {
@@ -283,6 +283,27 @@ namespace VaersCalculation
                 }
             }
             public double SkippedLineRatioDouble = 0;
+            private bool _readFileContentsDirectNoCalculation = true;
+            public bool ReadFileContentsDirectNoCalculation
+            {
+                get { return _readFileContentsDirectNoCalculation; }
+                set
+                {
+                    _readFileContentsDirectNoCalculation = value;
+                    this.OnPropertyChanged();
+                }
+            }
+            private int _searchCurrentLineNumber = 0;
+            public int SearchCurrentLineNumber
+            {
+                get { return _searchCurrentLineNumber; }
+                set
+                {
+                    _searchCurrentLineNumber = value;
+                    this.OnPropertyChanged();
+                }
+            }
+
         }
 
         public string GetFinishedLinePercentage(int currentLine, double totalLines)
@@ -311,14 +332,55 @@ namespace VaersCalculation
 
         private void ReadFileButton_Click(object sender, RoutedEventArgs e)
         {
-            PerformLineCalculationDiff(FileSourceTextBox.Text, (bool)GenerateFullIdReportCheckBox.IsChecked);
+            if (reportingViewModel.ReadFileContentsDirectNoCalculation)
+            {
+                QuickReadFileContentsDirectly(FileSourceTextBox.Text);
+            }
+            else
+            {
+                PerformLineCalculationDiff(FileSourceTextBox.Text, (bool)GenerateFullIdReportCheckBox.IsChecked);
+            }
         }
 
-        private bool _lineCalculationDiffInProgress = false;
+
+
+        async void QuickReadFileContentsDirectly(string filePath)
+        {
+            _fileReadOrCalculationInProgress = true;
+            await Task.Factory.StartNew(() => {
+                CachedTextToSearch = new List<string>();
+                reportingViewModel.FileContentsOutput = "";
+                reportingViewModel.FileContentsOutput = System.IO.File.ReadAllText(filePath);
+                var fileContentLineList = reportingViewModel.FileContentsOutput.Split('\n');
+                var lineListLast = fileContentLineList.Last().Split(',')[0];
+                reportingViewModel.FileEndLineId = Convert.ToInt32(fileContentLineList[fileContentLineList.Length - 2].Split(',')[0]);
+                reportingViewModel.FileLinesToBeProcessed = fileContentLineList.Length;
+                reportingViewModel.FileStartLineId = Convert.ToInt32(fileContentLineList[1].Split(',')[0]);
+                reportingViewModel.TotalReportedLines = reportingViewModel.FileEndLineId - reportingViewModel.FileStartLineId;
+                reportingViewModel.TotalLinesSkipped = reportingViewModel.TotalReportedLines - reportingViewModel.FileLinesToBeProcessed;
+                reportingViewModel.FileSkippedLinePercentage = GetSkippedLinePercentage(reportingViewModel.TotalLinesSkipped, reportingViewModel.FileLinesToBeProcessed);
+                reportingViewModel.SkippedLineRatioDouble = Convert.ToDouble(reportingViewModel.FileSkippedLinePercentage) / 100;
+
+                var currentLine = 0;
+
+                reportingViewModel.FileReadStatus = "File read to textbox, now indexing search engine... please wait";
+                foreach (var line in fileContentLineList)
+                {
+                    CachedTextToSearch.Add(line);
+                    currentLine++;
+                    reportingViewModel.PercentFinishedProcessing = GetFinishedLinePercentage(currentLine, reportingViewModel.FileLinesToBeProcessed);
+                }
+                reportingViewModel.FileReadStatus = "File finished indexing. Search is ready.";
+            });
+            _fileReadOrCalculationInProgress = false;
+        }
+
+
+        private bool _fileReadOrCalculationInProgress = false;
 
         public async void PerformLineCalculationDiff(string filePath, bool generateReport = false)
         {
-            _lineCalculationDiffInProgress = true;
+            _fileReadOrCalculationInProgress = true;
             var ids = new List<int>();
             var vaersLines = new List<string>();
             reportingViewModel.TotalLinesSkipped = 0;
@@ -338,7 +400,7 @@ namespace VaersCalculation
             catch (Exception ex)
             {
                 reportingViewModel.FileReadStatus = ex.Message;
-                _lineCalculationDiffInProgress = false;
+                _fileReadOrCalculationInProgress = false;
                 return;
             }
 
@@ -461,7 +523,7 @@ namespace VaersCalculation
                         }
                     }
                     reportingViewModel.SkippedLineRatioDouble = (double)reportingViewModel.TotalLinesSkipped / (double)lineNumber;
-                    _lineCalculationDiffInProgress = false;
+                    _fileReadOrCalculationInProgress = false;
                     reportingViewModel.AggregateReportOut = GenerateOutputReport(missingDatePairsById, reportingViewModel.TotalLinesSkipped, lineNumber, linesToBeProcessedDouble, reportingViewModel.FileStartLineId, reportingViewModel.FileEndLineId, startDate, endDate);
                 }
             });
@@ -567,7 +629,7 @@ namespace VaersCalculation
         {
             try
             {
-                WriteReportsToFiles(reportingViewModel.FileContentsOutput, reportingViewModel.AggregateReportOut, reportingViewModel.OutputReportFolderPath, false, reportingViewModel.SearchBarText);
+                WriteReportsToFiles(reportingViewModel.FileContentsOutput, reportingViewModel.AggregateReportOut, reportingViewModel.OutputReportFolderPath, false, SearchLinesTextBox.Text);
             }
             catch (Exception ex)
             {
@@ -621,7 +683,7 @@ namespace VaersCalculation
 
         private void SearchLinesTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (!_lineCalculationDiffInProgress)
+            if (!_fileReadOrCalculationInProgress)
             {
                 if (!_searchInProgress)
                 {
@@ -649,111 +711,123 @@ namespace VaersCalculation
 
         public async void SearchStringForContents(List<string> contentsToSearch, string searchTerms)
         {
-            List<string> searchTermList = new List<string>();
-            CachedLatestSearchTerms = searchTerms;
-            reportingViewModel.TotalSearchHitsText = 0;
-            reportingViewModel.TotalSearchRecordsProcessed = 0;
-            if (searchTerms.Contains(" OR ") || searchTerms.Contains(" AND ")) // this only works with OR right now
+            if (!_fileReadOrCalculationInProgress)
             {
-                LatestSearchIncludesMultipleTerms = true;
-                if (searchTerms.Contains(" AND ") && !searchTerms.Contains(" OR "))
+                List<string> searchTermList = new List<string>();
+                CachedLatestSearchTerms = searchTerms;
+                reportingViewModel.TotalSearchHitsText = 0;
+                reportingViewModel.TotalSearchRecordsProcessed = 0;
+                if (searchTerms.Contains(" OR ") || searchTerms.Contains(" AND ")) // this only works with OR right now
                 {
-                    foreach (var term in searchTerms.Split(new string[] { "AND" }, StringSplitOptions.None).ToList())
+                    LatestSearchIncludesMultipleTerms = true;
+                    if (searchTerms.Contains(" AND ") && !searchTerms.Contains(" OR "))
                     {
-                        if (term != "")
+                        foreach (var term in searchTerms.Split(new string[] { "AND" }, StringSplitOptions.None).ToList())
                         {
-                            searchTermList.Add(term);
+                            if (term != "")
+                            {
+                                searchTermList.Add(term);
+                            }
+                        }
+                    }
+                    else // contains only ORs or both AND OR
+                    {
+                        foreach (var term in searchTerms.Split(new string[] { " OR " }, StringSplitOptions.None).ToList())
+                        {
+                            if (term != "")
+                            {
+                                searchTermList.Add(term);
+                            }
                         }
                     }
                 }
-                else // contains only ORs or both AND OR
+                else
                 {
-                    foreach (var term in searchTerms.Split(new string[] { " OR " }, StringSplitOptions.None).ToList())
-                    {
-                        if (term != "")
-                        {
-                            searchTermList.Add(term);
-                        }
-                    }
+                    LatestSearchIncludesMultipleTerms = false;
                 }
-            }
-            else
-            {
-                LatestSearchIncludesMultipleTerms = false;
-            }
-            reportingViewModel.FileContentsOutput = "";
-            _searchInProgress = true;
-            if (searchTermList.Count <= 1) // only one search term, runs slightly faster due to no list splitting
-            {
-                await Task.Factory.StartNew(() =>
+                reportingViewModel.FileContentsOutput = "";
+                _searchInProgress = true;
+                if (searchTermList.Count <= 1) // only one search term, runs slightly faster due to no list splitting
                 {
-                    foreach (var line in contentsToSearch)
+                    await Task.Factory.StartNew(() =>
                     {
-                        if (CachedLatestSearchTerms != searchTerms)
+                        foreach (var line in contentsToSearch)
                         {
-                            return;
-                        }
-                        if (line.ToLower().Contains(searchTerms.ToLower()))
-                        {
-                            SetSearchHitMatch(line);
-                        }
-                        reportingViewModel.TotalSearchRecordsProcessed++;
-                    }
-                });
-            }
-            else
-            {
-                await Task.Factory.StartNew(() =>
-                {
-                    foreach (var line in contentsToSearch)
-                    {
-                        foreach (var searchTerm in searchTermList)
-                        {
-                            if (searchTerms != CachedLatestSearchTerms)
+                            if (CachedLatestSearchTerms != searchTerms)
                             {
                                 return;
                             }
-                            if (!searchTerm.Contains(" AND "))
+                            if (line.ToLower().Contains(searchTerms.ToLower()))
                             {
-                                if (line.ToLower().Contains(searchTerm.ToLower()))
-                                {
-                                    SetSearchHitMatch(line);
-                                    break;
-                                }
+                                SetSearchHitMatch(line);
                             }
-                            else // means we have AND and OR
-                                 // not finished; I might just use linq for this instead of reinventing the wheel
+                            reportingViewModel.TotalSearchRecordsProcessed++;
+                            reportingViewModel.SearchCurrentLineNumber = reportingViewModel.TotalSearchRecordsProcessed;
+
+
+                        }
+                    });
+                }
+                else
+                {
+                    await Task.Factory.StartNew(() =>
+                    {
+                        foreach (var line in contentsToSearch)
+                        {
+                            foreach (var searchTerm in searchTermList)
                             {
-                                var andConditions = searchTerm.Split(new string[] { "AND" }, StringSplitOptions.None);
-                                var andConditionLength = andConditions.Length;
-                                var andContitionsMet = 0;
-                                foreach (var andCondition in andConditions)
+                                if (searchTerms != CachedLatestSearchTerms)
                                 {
-                                    if (searchTerms != CachedLatestSearchTerms)
-                                    {
-                                        return;
-                                    }
-                                    if (line.Contains(andCondition))
-                                    {
-                                        andContitionsMet++;
-                                    }
-                                    if (andContitionsMet == andConditionLength)
+                                    return;
+                                }
+                                if (!searchTerm.Contains(" AND "))
+                                {
+                                    if (line.ToLower().Contains(searchTerm.ToLower()))
                                     {
                                         SetSearchHitMatch(line);
+                                        break;
+                                    }
+                                }
+                                else // means we have AND and OR
+                                     // not finished; I might just use linq for this instead of reinventing the wheel
+                                {
+                                    var andConditions = searchTerm.Split(new string[] { "AND" }, StringSplitOptions.None);
+                                    var andConditionLength = andConditions.Length;
+                                    var andContitionsMet = 0;
+                                    foreach (var andCondition in andConditions)
+                                    {
+                                        if (searchTerms != CachedLatestSearchTerms)
+                                        {
+                                            return;
+                                        }
+                                        if (line.Contains(andCondition))
+                                        {
+                                            andContitionsMet++;
+                                        }
+                                        if (andContitionsMet == andConditionLength)
+                                        {
+                                            SetSearchHitMatch(line);
+                                        }
                                     }
                                 }
                             }
+                            reportingViewModel.TotalSearchRecordsProcessed++;
                         }
-                        reportingViewModel.TotalSearchRecordsProcessed++;
-                    }
-                });
+                    });
+                }
+                _searchInProgress = false;
+
             }
-            _searchInProgress = false;
+            else
+            {
+                reportingViewModel.FileReadStatus = "File read in progress... please wait...";
+
+            }
         }
 
         public void SetSearchHitMatch(string line)
         {
-            reportingViewModel.FileContentsOutput = line + reportingViewModel.FileContentsOutput;
+            reportingViewModel.FileContentsOutput = line + "\n" + "\n" + reportingViewModel.FileContentsOutput;
             reportingViewModel.TotalSearchHitsText++;
         }
     }

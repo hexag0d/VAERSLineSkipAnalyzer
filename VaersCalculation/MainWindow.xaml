@@ -19,7 +19,7 @@
         <TextBox x:Name="StatusTextBox" Height="31" Margin="111,56,0,0" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Left" Width="138" Grid.Column="1" FontSize="12px" Text="{Binding FileReadStatus, Mode=OneWay}"/>
         <TextBox x:Name="TotalSkippedIdsTextBox" HorizontalAlignment="Left" Height="23" Margin="129,138,0,0" TextWrapping="Wrap" Text="{Binding TotalLinesSkipped, Mode=TwoWay}" VerticalAlignment="Top" Width="120" Grid.Column="1" FontSize="16px"/>
         <Button x:Name="VAERSCsvFileChooser" Content="VAERS CSV" Grid.Column="1" Margin="111,10,0,0" VerticalAlignment="Top" Click="VAERSCsvFileChooser_Click" HorizontalAlignment="Left" Width="85" d:LayoutOverrides="HorizontalAlignment"/>
-        <TextBox x:Name="ReportTextBox" VerticalScrollBarVisibility="Visible" Grid.Column="1" Height="49" Margin="254,38,10.4,0" TextWrapping="Wrap" Text="{Binding AggregateReportOut, Mode=TwoWay}" VerticalAlignment="Top" FontSize="16px"/>
+        <TextBox x:Name="ReportTextBox" VerticalScrollBarVisibility="Visible" Grid.Column="1" Height="49" Margin="254,38,164.4,0" TextWrapping="Wrap" Text="{Binding AggregateReportOut, Mode=TwoWay}" VerticalAlignment="Top" FontSize="16px"/>
         <CheckBox x:Name="GenerateFullIdReportCheckBox" Content="report" Margin="10,147,-32,0" VerticalAlignment="Top" IsChecked="True" d:LayoutOverrides="Width" IsEnabled="False"/>
         <Label Content="Start Line#" Margin="10,39,-7,0" VerticalAlignment="Top"/>
         <Label Content="Last Line#" Margin="10,65,-7,0" VerticalAlignment="Top"/>
@@ -46,11 +46,14 @@
         <Label Content="hits" Grid.Column="1" HorizontalAlignment="Right" Margin="0,118,254.4,0" VerticalAlignment="Top"/>
         <Label Content="Reported Lines" Grid.Column="1" HorizontalAlignment="Left" Margin="67,88,0,0" VerticalAlignment="Top" Width="87"/>
         <TextBox Grid.Column="1" HorizontalAlignment="Left" Height="23" Margin="154,87,0,0" TextWrapping="Wrap" Text="{Binding TotalReportedLines, Mode=OneWay}" VerticalAlignment="Top" Width="100"/>
-        <ProgressBar Grid.Column="1" Height="10" Margin="254,130,286.4,0" VerticalAlignment="Top" Maximum="{Binding TotalReportedLines, Mode=OneWay}" Minimum="0" Value="{Binding TotalSearchRecordsProcessed, Mode=OneWay}"/>
+        <ProgressBar Grid.Column="1" Height="10" Margin="254,130,286.4,0" VerticalAlignment="Top" Maximum="{Binding FileLinesToBeProcessed, Mode=OneWay}" Minimum="0" Value="{Binding TotalSearchRecordsProcessed, Mode=OneWay}"/>
         <Label Content="% records" Grid.Column="1" HorizontalAlignment="Right" Margin="0,118,129.4,0" VerticalAlignment="Top" Width="22"/>
         <TextBox x:Name="SearchPercentOfRecordsTextBox" Grid.Column="1" HorizontalAlignment="Right" Height="23" Margin="0,118,151.4,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="37" Text="{Binding SearchPercentOfRecords, Mode=OneWay}"/>
         <Label Content="Approx" Grid.Column="1" HorizontalAlignment="Right" Margin="0,116,89.4,0" VerticalAlignment="Top"/>
         <TextBox Grid.Column="1" HorizontalAlignment="Right" Height="23" Margin="0,114,0.4,0" TextWrapping="Wrap" Text="{Binding ApproximateHitsBasedOnMissingRecordPercentage, Mode=OneWay}" VerticalAlignment="Top" Width="84"/>
+
+        <CheckBox IsChecked="{Binding ReadFileContentsDirectNoCalculation, Mode=TwoWay}" Content="fast" Grid.Column="1" HorizontalAlignment="Left" Margin="204,38,0,0" VerticalAlignment="Top"/>
+        <TextBox  Grid.Column="1" HorizontalAlignment="Right" Height="23" Margin="0,42,36.4,0" TextWrapping="Wrap" Text="{Binding SearchCurrentLineNumber, Mode=TwoWay}" VerticalAlignment="Top" Width="120"/>
 
     </Grid>
 
