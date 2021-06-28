@@ -650,7 +650,7 @@ namespace VaersCalculation
                     }
                     else
                     {
-                        System.IO.File.WriteAllText($"{folderPath}{GenerateFileName($"VAERS_Search:{searchString}", reportingViewModel.FileModifiedWhen)}", fileContentsOutput);
+                        System.IO.File.WriteAllText($"{folderPath}VAERS_Search_{searchString}_source_csv{reportingViewModel.FileModifiedWhen}.txt", reportingViewModel.FileContentsOutput);
                     }
                 }
                 if (aggregateReportOut != null)
